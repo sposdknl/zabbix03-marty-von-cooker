@@ -1,23 +1,16 @@
 #!/usr/bin/env bash
 
-# Instalace balicku net-tools
-sudo apt-get install -y net-tools
+# Instalace Zabbix 7.0 LTS agent2 pro Ubuntu 22.04 (Jammy)
+echo "[+] Přidávám Zabbix 7.0 LTS repozitář..."
+wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-1%2Bubuntu22.04_all.deb -O /tmp/zabbix-release.deb
+sudo dpkg -i /tmp/zabbix-release.deb
+sudo apt update
 
-# Stažení balíčku pro instalaci zabbix repo
-sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest+ubuntu22.04_all.deb
+echo "[+] Instaluji Zabbix Agent2..."
+sudo apt install -y zabbix-agent2
 
-# Instalace meta balíčku
-sudo dpkg -i zabbix-release_latest+ubuntu22.04_all.deb
-
-# Aktualizace repository
-sudo apt-get update
-
-# Instalace meta balíčku
-sudo apt-get install -y zabbix-agent2 zabbix-agent2-plugin-*
-
-# Povoleni sluzby zabbix-agent2
+echo "[+] Povoluji službu zabbix-agent2..."
 sudo systemctl enable zabbix-agent2
-
 # Restart sluzby zabbix-agent2
 sudo systemctl restart zabbix-agent2
 

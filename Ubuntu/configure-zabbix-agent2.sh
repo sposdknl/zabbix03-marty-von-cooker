@@ -1,19 +1,24 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# Unikatni hostname ubuntu (Lepší než hostname školní stanice)
-UNIQUE_HOSTNAME="ubuntu-$(uuidgen)"
-SHORT_HOSTNAME=$(echo $UNIQUE_HOSTNAME | cut -d'-' -f1,2)
+ZBX_SERVER_IP="192.168.1.2"       # IP adresa Zabbix Appliance
+HOST_METADATA="SPOS"              # Metadata pro auto-registraci
 
-# # Konfigurace zabbix_agent2.conf
-sudo cp -v /etc/zabbix/zabbix_agent2.conf /etc/zabbix/zabbix_agent2.conf-orig
-sudo sed -i "s/Hostname=Zabbix server/Hostname=$SHORT_HOSTNAME/g" /etc/zabbix/zabbix_agent2.conf
-sudo sed -i 's/Server=127.0.0.1/Server=enceladus.pfsense.cz/g' /etc/zabbix/zabbix_agent2.conf
-sudo sed -i 's/ServerActive=127.0.0.1/ServerActive=enceladus.pfsense.cz/g' /etc/zabbix/zabbix_agent2.conf
-sudo sed -i 's/# Timeout=3/Timeout=30/g' /etc/zabbix/zabbix_agent2.conf
-sudo sed -i 's/# HostMetadata=/HostMetadata=SPOS/g' /etc/zabbix/zabbix_agent2.conf
-sudo diff -u /etc/zabbix/zabbix_agent2.conf-orig /etc/zabbix/zabbix_agent2.conf
+echo "[+] Zálohuji původní konfiguraci agenta..."
+sudo cp /etc/zabbix/zabbix_agent2.conf /etc/zabbix/zabbix_agent2.conf.bak
 
-# Restart sluzby zabbix-agent2
+echo "[+] Nastavuji server a aktivní server..."
+sudo sed -i "s/^Server=.*/Server=$ZBX_SERVER_IP/" /etc/zabbix/zabbix_agent2.conf
+sudo sed -i "s/^ServerActive=.*/ServerActive=$ZBX_SERVER_IP/" /etc/zabbix/zabbix_agent2.conf
+
+echo "[+] Nastavuji hostname na název stroje..."
+sudo sed -i "s/^Hostname=.*/Hostname=$(hostname)/" /etc/zabbix/zabbix_agent2.conf
+
+echo "[+] Nastavuji HostMetadata pro auto-registraci..."
+if grep -q "^HostMetadata=" /etc/zabbix/zabbix_agent2.conf; then
+    sudo sed -i "s/^HostMetadata=.*/HostMetadata=$HOST_METADATA/" /etc/zabbix/zabbix_agent2.conf
+else
+    echo "HostMetadata=$HOST_METADATA" | sudo tee -a /etc/zabbix/zabbix_agent2.conf
+fi
+
+echo "[+] Restartuji službu zabbix-agent2..."
 sudo systemctl restart zabbix-agent2
-
-# EOF
